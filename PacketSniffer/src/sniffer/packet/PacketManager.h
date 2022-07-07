@@ -68,6 +68,9 @@ namespace sniffer::packet
 
 		static uint64_t GenerateUniqueID();
 
+		static void CheckSessionUpdate(uint32_t sequenceID);
+
+		static inline uint32_t s_LastSequenceID = 0;
 		static inline PacketParser* s_Parser = nullptr;
 		static inline IPacketHandler* s_Handler = nullptr;
 		static inline std::thread* s_NetworkThread;
@@ -86,7 +89,7 @@ namespace sniffer::packet
 		static inline std::atomic<std::pair<ModifyType, RawPacketData>*> s_ModifyResponse;
 
 		static inline TEvent<const Packet*, uint64_t> s_PacketReceiveEvent;
-		static inline TEvent<const Packet*> s_NewSessionEvent;
+		static inline TEvent<> s_NewSessionEvent;
 		static inline TEvent<const Packet*, ModifyType, RawPacketData> s_PacketModifiedEvent;
 
 		static inline TEvent<const Packet*> s_FavoritePacketAdded;
@@ -96,7 +99,7 @@ namespace sniffer::packet
 
 		static inline IEvent<const Packet*, ModifyType, RawPacketData>& PacketModifiedEvent = s_PacketModifiedEvent;
 		static inline IEvent<const Packet*, uint64_t>& PacketReceiveEvent = s_PacketReceiveEvent;
-		static inline IEvent<const Packet*>& NewSessionEvent = s_NewSessionEvent;
+		static inline IEvent<>& NewSessionEvent = s_NewSessionEvent;
 
 		static inline IEvent<const Packet*>& FavoritePacketAdded = s_FavoritePacketAdded;
 		static inline IEvent<const Packet*>& FavoritePacketPreRemove = s_FavoritePacketPreRemove;

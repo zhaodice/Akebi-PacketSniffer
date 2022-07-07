@@ -16,20 +16,20 @@ namespace sniffer::packet
 		config.f_ProtoIDsPath.FieldChangedEvent += FUNCTION_HANDLER(OnProtoIDPathChanged);
 		config.f_ProtoIDMode.FieldChangedEvent += FUNCTION_HANDLER(OnProtoIDModeChanged);
 
-		f_FavoritePackets = config::CreateField<decltype(f_FavoritePackets)::_ValueType>("FavoritePackets", 
-			"favorite_packets", "sniffer::manager", false, 
+		f_FavoritePackets = config::CreateField<decltype(f_FavoritePackets)::_ValueType>("FavoritePackets",
+			"favorite_packets", "sniffer::manager", false,
 			decltype(f_FavoritePackets)::_ValueType{});
 
 		f_ModifySelectorProfiler = config::CreateField<Profiler<script::ScriptSelector>>(
-			"ModifySelectorProfiler", "modify_selector_profiler", "sniffer::manager", true, 
+			"ModifySelectorProfiler", "modify_selector_profiler", "sniffer::manager", true,
 			Profiler<script::ScriptSelector>("default", script::ScriptSelector()));
 
 		for (auto& [name, selector] : f_ModifySelectorProfiler.value().profiles())
 			selector.SetFilter(ModifySelectorFilter);
-		
+
 		f_ModifySelectorProfiler.value().ChangedEvent += FUNCTION_HANDLER(PacketManager::OnModifyProfilerChanged);
 		f_ModifySelectorProfiler.value().NewProfileEvent += FUNCTION_HANDLER(PacketManager::OnModifyProfileAdded);
-		for (auto& [name, selector] :f_ModifySelectorProfiler.value().profiles())
+		for (auto& [name, selector] : f_ModifySelectorProfiler.value().profiles())
 			selector.SelectChangedEvent += FUNCTION_HANDLER(PacketManager::OnScriptSelectChanged);
 
 		s_Parser = new sniffer::PacketParser(config.f_ProtoDirPath, config.f_ProtoIDsPath,
@@ -97,6 +97,8 @@ namespace sniffer::packet
 		auto& client_sequence_id = client_sequence_id_value.to_unsigned32();
 		if (client_sequence_id == 0)
 			return;
+
+		CheckSessionUpdate(client_sequence_id);
 
 		s_RelatedPackets[client_sequence_id].push_back(&packet);
 	}
@@ -208,7 +210,7 @@ namespace sniffer::packet
 			return;
 
 		auto results = s_Parser->ParseUnionPacket(packet.content(), packet.mid(), false);
-		
+
 		std::vector<uint64_t> childs;
 		for (auto& nested : results)
 		{
@@ -254,7 +256,7 @@ namespace sniffer::packet
 		}
 
 		auto childs = GetPacketChildren(packet->uid());
-		if (modifyType == ModifyType::Blocked || 
+		if (modifyType == ModifyType::Blocked ||
 			(childs.size() == 0 && modifiedPacket == nullptr && modifyType != ModifyType::Modified))
 		{
 			if (modifiedPacket != nullptr)
@@ -382,7 +384,7 @@ namespace sniffer::packet
 		std::vector<const Packet*> packets;
 		for (auto& uid : it->second)
 			packets.push_back(s_PacketMap.at(uid));
-		
+
 		return packets;
 	}
 
@@ -453,8 +455,8 @@ namespace sniffer::packet
 
 	void PacketManager::RemoveFavoritePacket(const Packet* packet)
 	{
-		auto it = 
-			std::find_if(f_FavoritePackets.value().begin(), f_FavoritePackets.value().end(), 
+		auto it =
+			std::find_if(f_FavoritePackets.value().begin(), f_FavoritePackets.value().end(),
 				[packet](const Packet& element) { return packet == &element; });
 
 		RemoveFavoritePacket(it);
@@ -485,118 +487,17 @@ namespace sniffer::packet
 		return s_Packets.size();
 	}
 
-	// To move
-	/*
-		static ImColor _colorPallete[] = {
-		ImColor(72, 86, 150),
-		ImColor(231, 231, 231),
-		ImColor(249, 199, 132),
-		ImColor(252, 122, 30),
-		ImColor(242, 76, 0),
-		ImColor(136, 73, 143),
-		ImColor(119, 159, 161),
-		ImColor(224, 203, 168),
-		ImColor(255, 101, 66),
-		ImColor(86, 65, 84),
-		ImColor(205, 247, 246),
-		ImColor(143, 184, 222),
-		ImColor(154, 148, 188),
-		ImColor(155, 80, 148),
-		ImColor(234, 140, 85)
-	};
-
-	void PacketManager::FillRelativities(PacketData& packetData)
+	void PacketManager::CheckSessionUpdate(uint32_t sequenceID)
 	{
-		if (packetData.content.has_flag(ProtoMessage::Flag::IsUnpacked))
-			return;
-
-		if (!packetData.header.has("client_sequence_id"))
-			return;
-
-		auto& client_sequence_id_value = packetData.header.field_at("client_sequence_id").value();
-		if (!client_sequence_id_value.is_unsigned32())
-			return;
-
-		auto& client_sequence_id = client_sequence_id_value.to_unsigned32();
-		if (client_sequence_id == 0)
-			return;
-
-		auto it = s_RelatedPackets.find(client_sequence_id);
-		if (it == s_RelatedPackets.end())
+		if (s_LastSequenceID <= sequenceID + 100) // Threshold
 		{
-			s_RelatedPackets[client_sequence_id].push_back(&packetData);
+			s_LastSequenceID = s_LastSequenceID > sequenceID ? s_LastSequenceID : sequenceID;
 			return;
 		}
 
-		auto& related_packets = it->second;
-		auto& first_packet = *related_packets.begin();
-
-		if (first_packet->timestamp + 60000 < packetData.timestamp)
-		{
-			related_packets.clear();
-			related_packets.push_back(&packetData);
-			return;
-		}
-
-		ImColor color = _colorPallete[client_sequence_id % (sizeof(_colorPallete) / sizeof(_colorPallete[0]))];
-
-		if (related_packets.size() == 1)
-		{
-			auto request_flag = PacketFlag("Req", fmt::format("Have a linked response with sequence id {}", packetData.sequenceID), color,
-				{
-					{ "rel", packetData.sequenceID }
-				});
-			first_packet->AddFlag(request_flag);
-
-			auto responce_flag = PacketFlag("Rsp", fmt::format("Have a linked request with sequence id {}", first_packet->sequenceID), color,
-				{
-					{ "rel", first_packet->sequenceID }
-				});
-			packetData.AddFlag(responce_flag);
-		}
-		else
-		{
-			std::vector<int64_t> related_packets_ids;
-			for (auto& packet : related_packets)
-			{
-				related_packets_ids.push_back(packet->sequenceID);
-			}
-			related_packets_ids.push_back(packetData.sequenceID);
-
-			auto related_flag = PacketFlag("Rel", fmt::format("Have several packet with the same sequence id."), color,
-				{
-					{ "rel", std::move(related_packets_ids) }
-				}
-			);
-
-			bool need_change_flag = related_packets.size() == 2;
-			if (need_change_flag)
-			{
-				auto& second_packet = related_packets[1];
-				first_packet->RemoveFlag("Req");
-				second_packet->RemoveFlag("Rsp");
-				first_packet->AddFlag(related_flag);
-				second_packet->AddFlag(related_flag);
-			}
-
-			for (auto& packet : related_packets)
-			{
-				auto flag = packet->GetFlag("Rel");
-				assert(flag != nullptr);
-
-				auto& info = flag->info();
-				auto rel_it = info.find("rel");
-				if (rel_it == info.end())
-					continue;
-
-				rel_it->array().push_back(packetData.sequenceID);
-			}
-
-			packetData.AddFlag(related_flag);
-		}
-
-		related_packets.push_back(&packetData);
+		s_RelatedPackets.clear();
+		// Sometimes give incorrect calls, so better don't push event for now
+		// s_NewSessionEvent();
+		s_LastSequenceID = sequenceID;
 	}
-
-	*/
 }
