@@ -14,7 +14,7 @@ Video with usage: https://youtu.be/pCGlg_ou-Nc
 ## How to build
 1. Download and install dependencies
 ```
-git clone https://github.com/Akebi-Group/Akebi-PacketSniffer
+git clone https://github.com/Akebi-Group/Akebi-PacketSniffer --recursive
 cd Akebi-PacketSniffer
 ./install_dependencies.bat
 ```
