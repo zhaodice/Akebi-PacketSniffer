@@ -1,0 +1,3 @@
+[submodule "PacketSniffer/vendor/ImGuiColorTextEdit"]
+	path = PacketSniffer/vendor/ImGuiColorTextEdit
+	url = https://github.com/BalazsJako/ImGuiColorTextEdit
