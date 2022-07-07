@@ -108,7 +108,7 @@
     <ClInclude Include="src\sniffer\gui\CapturePacketWnd.h" />
     <ClInclude Include="src\sniffer\gui\PacketWndBase.h" />
     <ClInclude Include="src\sniffer\filter\IFilterComparer.h" />
-    <ClInclude Include="resource.h" />
+    <ClInclude Include="res\resource.h" />
     <ClInclude Include="src\sniffer\filter\FilterGroup.h" />
     <ClInclude Include="src\sniffer\filter\FilterSelector.h" />
     <ClInclude Include="src\sniffer\filter\IFilter.h" />
@@ -131,10 +131,7 @@
     <ClInclude Include="vendor\ImGuiColorTextEdit\TextEditor.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="PacketSniffer.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Font Include="C:\Users\strog\Desktop\Git repositories\genshin-cheat\cheat-library\res\Ruda-Bold.ttf" />
+    <ResourceCompile Include="res\PacketSniffer.rc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\cheat-base\cheat-base.vcxproj">

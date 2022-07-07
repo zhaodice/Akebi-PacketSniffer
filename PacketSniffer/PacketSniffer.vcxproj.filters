@@ -167,7 +167,7 @@
     <ClInclude Include="src\sniffer\gui\SnifferWnd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="res\resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\sniffer\gui\PacketWndBase.h">
@@ -307,11 +307,8 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="PacketSniffer.rc">
+    <ResourceCompile Include="res\PacketSniffer.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Font Include="C:\Users\strog\Desktop\Git repositories\genshin-cheat\cheat-library\res\Ruda-Bold.ttf" />
   </ItemGroup>
 </Project>

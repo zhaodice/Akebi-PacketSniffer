@@ -60,7 +60,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // RCDATA
 //
 
-ImGui_Font              RCDATA                  "D:\\Git\\Akebi-GC\\cheat-library\\res\\Ruda-Bold.ttf"
+ImGui_Font              RCDATA                  "Ruda-Bold.ttf"
 
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
