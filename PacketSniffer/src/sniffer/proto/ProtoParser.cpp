@@ -52,9 +52,10 @@ namespace sniffer
 		auto content = nlohmann::json::parse(file);
 		for (nlohmann::json::iterator it = content.begin(); it != content.end(); ++it)
 		{
-			auto id = std::stoi(it.key());
-			m_NameMap[id] = it.value();
-			m_IdMap[it.value()] = id;
+			auto id = it.value().is_number() ? static_cast<uint32_t>(it.value()) : std::stoul(it.key());
+			auto name = it.value().is_number() ? it.key() : static_cast<std::string>(it.value());;
+			m_NameMap[id] = name;
+			m_IdMap[name] = id;
 		}
 		file.close();
 	}
@@ -97,8 +98,13 @@ namespace sniffer
 			//auto messageId = std::stoi(cmdIDMatch[1]);
 
 			// Optimized code
-			const char* cmdIDPattern = "CMD_ID = ";
-			constexpr size_t cmdIDPatternSize = 9;
+			constexpr std::array<std::pair<const char*, size_t>, 2> cmdIDPatterns = {
+				{
+					{ "CMD_ID = ", 9 },
+					{ "// CmdId: ", 10 }
+				}
+			};
+
 			std::string line;
 			while (std::getline(buffer, line))
 			{
@@ -110,16 +116,28 @@ namespace sniffer
 					start_index++;
 				}
 				
-				if (start_index + cmdIDPatternSize > line.size())
-					continue;
-				
-				if (std::memcmp(line.data() + start_index, cmdIDPattern, cmdIDPatternSize) != 0)
+				size_t index = 0;
+				for (auto& [pattern, patternSize] : cmdIDPatterns)
+				{
+					
+					if (start_index + patternSize > line.size())
+						continue;
+
+
+					if (std::memcmp(line.data() + start_index, pattern, patternSize) != 0)
+						continue;
+
+
+					index = start_index + patternSize;
+					break;
+				}
+
+				if (index == 0)
 					continue;
 
 				int messageId = 0;
-				size_t index = start_index + cmdIDPatternSize;
-				char ch;
 
+				char ch;
 				// Native stoi
 				while (line.size() > index && (ch = line.data()[index], ch >= '0' && ch <= '9'))
 				{
