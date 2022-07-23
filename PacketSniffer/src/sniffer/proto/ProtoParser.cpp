@@ -204,8 +204,12 @@ namespace sniffer
 		auto raw_message = name.empty() ? ParseMessage("Empty", data) : ParseMessage(name, data);
 		if (raw_message == nullptr)
 		{
-			LOG_ERROR("Failed to parse message with name %s.", name.c_str());
-			return false;
+			LOG_WARNING("Failed to parse message with name %s.", name.c_str());
+			raw_message = ParseMessage("Default", data);
+			if(raw_message == nullptr){
+				LOG_ERROR("Failed to find Default.proto file as a default structure!");
+				return false;
+			}
 		}
 
 		auto result = ConvertMessage(message, *raw_message);
